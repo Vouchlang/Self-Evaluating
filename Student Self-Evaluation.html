@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Student Self-Evaluation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style id="app-style">
+/* Layout: one narrow reading column; questions as cards, a sticky submit bar, result as a single report card. */
+:root{
+  --bg:#eef3f2; --surface:#ffffff; --ink:#17201f; --muted:#566563;
+  --line:#d5e0de; --accent:#0f6e6a; --accent-ink:#ffffff; --mark:#d99a14; --warn:#b4471f; --ok:#2c7a3f;
+  --font-display:"Kantumruy Pro", "Noto Sans Khmer", "Khmer OS", system-ui, sans-serif;
+  --font-body:"Kantumruy Pro", "Noto Sans Khmer", "Khmer OS", system-ui, sans-serif;
+  --radius:12px; color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1615; --surface:#15201f; --ink:#e3eeec; --muted:#9db1ad; --line:#263634;
+    --accent:#3cbcb0; --accent-ink:#04201d; --mark:#f0b840; --warn:#f08a62; --ok:#6cc483; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1615; --surface:#15201f; --ink:#e3eeec; --muted:#9db1ad; --line:#263634;
+  --accent:#3cbcb0; --accent-ink:#04201d; --mark:#f0b840; --warn:#f08a62; --ok:#6cc483; color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased}
+.wrap{max-width:720px;margin:0 auto;padding:20px 16px 120px;display:flex;flex-direction:column;gap:16px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.eyebrow{font-size:13px;font-weight:600;color:var(--accent);letter-spacing:.02em}
+.lang{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--surface)}
+.lang button{border:0;background:transparent;color:var(--muted);font:inherit;font-size:13px;padding:4px 12px;cursor:pointer}
+.lang button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);font-weight:600}
+h1{font-family:var(--font-display);font-size:clamp(22px,4.5vw,28px);line-height:1.4;margin:0;text-wrap:balance;font-weight:700}
+h2{font-size:18px;margin:0;font-weight:700;text-wrap:balance}
+.intro{color:var(--muted);margin:0;max-width:65ch}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+.who{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:480px){.who{grid-template-columns:1fr}}
+label.field{display:flex;flex-direction:column;gap:4px;font-size:14px;color:var(--muted)}
+input[type=text],input[type=number],textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
+textarea{resize:vertical;min-height:64px}
+input:focus-visible,textarea:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+fieldset.q{margin:0;display:flex;flex-direction:column;gap:12px}
+fieldset.q legend{display:contents}
+.qhead{display:flex;gap:12px;align-items:flex-start}
+.qnum{flex:none;width:28px;height:28px;border-radius:50%;background:var(--bg);border:1px solid var(--line);display:grid;place-items:center;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--muted)}
+.q.done .qnum{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.qtext{font-weight:500;margin:0;padding-top:1px}
+.scale{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.opt{position:relative}
+.opt input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.opt span{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px;border:1px solid var(--line);border-radius:10px;background:var(--bg);text-align:center;height:100%;transition:background .12s,border-color .12s}
+.opt b{font-size:20px;line-height:1.2;font-variant-numeric:tabular-nums}
+.opt small{font-size:11.5px;line-height:1.35;color:var(--muted)}
+.opt input:hover + span{border-color:var(--accent)}
+.opt input:checked + span{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.opt input:checked + span small{color:var(--accent-ink)}
+.opt input:focus-visible + span{outline:2px solid var(--accent);outline-offset:2px}
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding:12px 16px}
+.bar-in{max-width:720px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.progress{font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums}
+.btn{font:inherit;font-weight:600;border-radius:10px;padding:10px 18px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);cursor:pointer}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn.small{padding:6px 12px;font-size:14px}
+.linkbtn{font:inherit;font-size:14px;background:none;border:0;color:var(--accent);cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px}
+.foot{text-align:center;font-size:13px;color:var(--muted)}
+/* Result */
+.score{display:flex;align-items:baseline;gap:8px;font-variant-numeric:tabular-nums}
+.score .big{font-size:56px;font-weight:700;line-height:1;color:var(--accent)}
+.score .of{font-size:22px;color:var(--muted)}
+.pill{display:inline-block;font-size:13px;font-weight:600;padding:2px 10px;border-radius:999px;background:color-mix(in srgb,var(--mark) 22%,transparent);color:var(--ink);border:1px solid var(--mark)}
+.res-head{display:flex;flex-direction:column;gap:10px}
+.res-who{font-size:14px;color:var(--muted)}
+.desc{margin:0;max-width:65ch}
+.track{position:relative;margin-top:26px}
+.segs{display:flex;height:14px;border-radius:7px;overflow:hidden;gap:2px}
+.segs div{height:100%}
+.marker{position:absolute;top:-24px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;font-size:12px;font-weight:700;color:var(--ink);white-space:nowrap}
+.marker i{display:block;width:2px;height:32px;background:var(--mark);margin-top:2px}
+.ends{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:6px;font-variant-numeric:tabular-nums}
+.list{display:flex;flex-direction:column;gap:8px;margin:0;padding:0;list-style:none}
+.row{display:grid;grid-template-columns:1fr auto;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.row .v{font-weight:700;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.row .v small{display:block;font-weight:400;font-size:12px;color:var(--muted)}
+.lvl{display:grid;grid-template-columns:84px 1fr;gap:12px;padding:12px;border-radius:10px;border:1px solid var(--line)}
+.lvl.me{border:2px solid var(--mark);background:color-mix(in srgb,var(--mark) 9%,var(--surface))}
+.lvl .rng{font-weight:700;font-variant-numeric:tabular-nums;color:var(--accent)}
+.lvl h3{font-size:15px;margin:0 0 2px}
+.lvl p{margin:0;font-size:14px;color:var(--muted)}
+.lvl .you{font-size:12px;font-weight:700;color:var(--mark)}
+@media (max-width:480px){.lvl{grid-template-columns:1fr;gap:4px}}
+.note{font-size:14px;color:var(--muted);margin:0}
+.banner{background:color-mix(in srgb,var(--mark) 18%,var(--surface));border:1px solid var(--mark);border-radius:10px;padding:10px 14px;font-size:14px;display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+/* Setup */
+.stack{display:flex;flex-direction:column;gap:12px}
+.sec-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.qedit{display:grid;grid-template-columns:28px 1fr auto;gap:10px;align-items:start}
+.scale-edit{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+@media (max-width:560px){.scale-edit{grid-template-columns:1fr 1fr}}
+.redit{display:grid;grid-template-columns:72px 72px 1fr auto;gap:8px;align-items:end;padding-top:12px;border-top:1px solid var(--line)}
+.redit:first-of-type{border-top:0;padding-top:0}
+.redit .full{grid-column:1 / -1}
+@media (max-width:480px){.redit{grid-template-columns:1fr 1fr}.redit .t{grid-column:1 / -1}}
+.rm{font:inherit;font-size:13px;background:none;border:1px solid var(--line);color:var(--warn);border-radius:8px;padding:6px 10px;cursor:pointer}
+.msg{font-size:14px;padding:8px 12px;border-radius:8px;margin:0}
+.msg.err{background:color-mix(in srgb,var(--warn) 12%,transparent);color:var(--warn)}
+.msg.ok{background:color-mix(in srgb,var(--ok) 12%,transparent);color:var(--ok)}
+.msg.info{background:var(--bg);color:var(--muted)}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+textarea.json{font-family:ui-monospace,Menlo,monospace;font-size:12px;min-height:160px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+<script id="cfg" type="application/json">{"title":"ការវាយតម្លៃខ្លួនឯង៖ ជំនាញកុំព្យូទ័រសម្រាប់រដ្ឋបាល","intro":"អានសំណួរនីមួយៗ ហើយជ្រើសលេខពី 1 ដល់ 5 ដែលត្រូវនឹងសមត្ថភាពពិតរបស់អ្នក។ គ្មានចម្លើយត្រូវ ឬខុសទេ។","scale":["មិនទាន់អាចធ្វើបាន","ធ្វើបានតិចតួច","ធ្វើបានមធ្យម","ធ្វើបានល្អ","ធ្វើបានល្អណាស់"],"questions":["ខ្ញុំអាចប្រើ Microsoft Word ដើម្បីរៀបចំលិខិត និងឯកសាររដ្ឋបាលតាមទម្រង់ត្រឹមត្រូវ។","ខ្ញុំអាចប្រើ Microsoft Excel ដើម្បីបញ្ចូលទិន្នន័យ និងគណនាដោយប្រើរូបមន្តសាមញ្ញ។","ខ្ញុំអាចបង្កើតបទបង្ហាញ PowerPoint ដែលច្បាស់លាស់ និងងាយយល់។","ខ្ញុំអាចប្រើអ៊ីមែល និង Google Drive ដើម្បីផ្ញើ ចែករំលែក និងរក្សាទុកឯកសារ។","ខ្ញុំអាចរៀបចំថតឯកសារ (Folder) ក្នុងកុំព្យូទ័របានជាប្រព័ន្ធ និងងាយស្វែងរក។"],"ranges":[{"from":1,"to":5,"title":"កម្រិតចាប់ផ្តើម","desc":"អ្នកទើបតែចាប់ផ្តើមស្គាល់ជំនាញទាំងនេះ។ សូមចូលរៀនឲ្យបានទៀងទាត់ ហាត់អនុវត្តតាមលំហាត់ក្នុងថ្នាក់ និងសួរសាស្ត្រាចារ្យភ្លាមៗពេលមិនយល់។"},{"from":6,"to":10,"title":"កម្រិតត្រូវពង្រឹង","desc":"អ្នកមានមូលដ្ឋានខ្លះហើយ ប៉ុន្តែនៅត្រូវការជំនួយច្រើន។ ជ្រើសរើសជំនាញដែលអ្នកដាក់ពិន្ទុទាបបំផុត ហើយហាត់ម្តងមួយៗរៀងរាល់សប្តាហ៍។"},{"from":11,"to":15,"title":"កម្រិតមធ្យម","desc":"អ្នកអាចធ្វើការងារមូលដ្ឋានបានដោយខ្លួនឯង។ បន្តហាត់ជាមួយកិច្ចការជាក់ស្តែង ដើម្បីឲ្យកាន់តែលឿន និងត្រឹមត្រូវ។"},{"from":16,"to":20,"title":"កម្រិតល្អ","desc":"អ្នកប្រើប្រាស់ជំនាញទាំងនេះបានយ៉ាងល្អក្នុងការងារភាគច្រើន។ សាកល្បងមុខងារកម្រិតខ្ពស់ ដូចជារូបមន្ត Excel ឬគំរូឯកសារ (Template)។"},{"from":21,"to":25,"title":"កម្រិតល្អណាស់","desc":"អ្នកមានទំនុកចិត្ត និងអាចធ្វើការងារបានយ៉ាងស្ទាត់ជំនាញ។ អ្នកអាចជួយណែនាំមិត្តរួមថ្នាក់ និងរៀនជំនាញថ្មីៗបន្ថែម។"}]}</script>
+</head>
+<body>
+<div id="app"></div>
+<script id="app-script">
+(function(){
+"use strict";
+var config = JSON.parse(document.getElementById("cfg").textContent);
+var draft = clone(config);
+var lang = store("lang") || "km";
+var answers = {};
+var who = {name:"", sid:""};
+var result = null;
+var previewing = false;
+var status = null;     // {text, kind}
+var showJson = false;
+var app = document.getElementById("app");
+
+var T = {
+  km:{
+    tag:"ការវាយតម្លៃខ្លួនឯង", name:"ឈ្មោះ (មិនចាំបាច់)", sid:"អត្តលេខនិស្សិត (មិនចាំបាច់)",
+    answered:"បានឆ្លើយ {a} / {n}", submit:"បញ្ជូន និងមើលលទ្ធផល", needAll:"សូមឆ្លើយគ្រប់សំណួរ",
+    total:"ពិន្ទុសរុបរបស់អ្នក", level:"កម្រិតរបស់អ្នក", breakdown:"ពិន្ទុតាមសំណួរនីមួយៗ",
+    all:"ការពិពណ៌នាកម្រិតទាំងអស់", you:"អ្នកនៅកម្រិតនេះ", retry:"វាយតម្លៃម្តងទៀត",
+    shot:"ថតអេក្រង់លទ្ធផលនេះ ហើយផ្ញើទៅសាស្ត្រាចារ្យរបស់អ្នក ប្រសិនបើគាត់ស្នើសុំ។",
+    noRange:"ពិន្ទុនេះមិនទាន់មានក្នុងកម្រិតណាមួយទេ។ សូមប្រាប់សាស្ត្រាចារ្យរបស់អ្នក។",
+    forLect:"សម្រាប់សាស្ត្រាចារ្យ៖ កែសំណួរ និងកម្រិត", points:"ពិន្ទុ",
+    preview:"កំពុងមើលជាមុន ដូចនិស្សិតឃើញ។ មិនទាន់រក្សាទុកទេ។", backSetup:"ត្រឡប់ទៅការកំណត់",
+    setup:"កំណត់ការវាយតម្លៃ", setupIntro:"កែចំណងជើង សំណួរ ជួរពិន្ទុ និងការពិពណ៌នា។ ចុច «រក្សាទុក» ដើម្បីឲ្យនិស្សិតទាំងអស់ឃើញកំណែថ្មីតាមតំណដដែល។",
+    fTitle:"ចំណងជើង", fIntro:"សេចក្តីណែនាំសម្រាប់និស្សិត", scaleH:"ស្លាកលេខ 1 ដល់ 5",
+    qH:"សំណួរ", addQ:"+ បន្ថែមសំណួរ", rm:"លុប", rH:"ជួរពិន្ទុ និងការពិពណ៌នា",
+    rHint:"ជាមួយ {n} សំណួរ ពិន្ទុសរុបអាចមានពី {min} ដល់ {max}។",
+    from:"ពី", to:"ដល់", lvlName:"ឈ្មោះកម្រិត", desc:"ការពិពណ៌នា (និស្សិតឃើញក្រោយបញ្ជូន)",
+    addR:"+ បន្ថែមជួរ", split:"បែងចែកជួរស្មើៗគ្នា",
+    gap:"ពិន្ទុ {l} មិនស្ថិតក្នុងជួរណាមួយទេ។", overlap:"ពិន្ទុ {l} ស្ថិតក្នុងជួរច្រើនជាងមួយ។",
+    badR:"ជួរទី {i}៖ លេខ «ពី» ធំជាងលេខ «ដល់»។", emptyQ:"សំណួរទី {i} នៅទទេ។", noQ:"ត្រូវមានសំណួរយ៉ាងហោចណាស់មួយ។",
+    allOk:"ពិន្ទុសរុបនីមួយៗស្ថិតក្នុងជួរតែមួយ។ រួចរាល់សម្រាប់រក្សាទុក។",
+    save:"រក្សាទុក និងផ្សព្វផ្សាយ", doPreview:"មើលជាមុនដូចនិស្សិត", copy:"ចម្លងការកំណត់",
+    copied:"បានចម្លងការកំណត់។", copyManual:"ចម្លងអត្ថបទខាងក្រោម ហើយផ្ញើទៅ Claude។",
+    fixFirst:"សូមកែបញ្ហាខាងលើមុននឹងរក្សាទុក។", saving:"កំពុងរក្សាទុក...",
+    saved:"បានរក្សាទុក។ ទំព័រនឹងផ្ទុកឡើងវិញជាកំណែថ្មី។",
+    noCap:"មិនអាចរក្សាទុកក្នុងទិដ្ឋភាពនេះបានទេ។ សូមបើកទំព័រនេះនៅលើ claude.ai ដោយចូលគណនីម្ចាស់ ឬចុច «ចម្លងការកំណត់» ហើយផ្ញើទៅ Claude។",
+    notWriter:"មានតែម្ចាស់ទំព័រ ឬអ្នកមានសិទ្ធិកែប៉ុណ្ណោះ ដែលអាចរក្សាទុកបាន។",
+    conflict:"មានកំណែថ្មីទើបតែរក្សាទុក។ ទំព័រនឹងផ្ទុកឡើងវិញ សូមកែម្តងទៀត។",
+    failed:"រក្សាទុកមិនបានទេ៖ {m}", dirty:"មានការកែប្រែមិនទាន់រក្សាទុក។", back:"← ទំព័រនិស្សិត"
+  },
+  en:{
+    tag:"Self-evaluation", name:"Name (optional)", sid:"Student ID (optional)",
+    answered:"Answered {a} of {n}", submit:"Submit and see my result", needAll:"Answer every question",
+    total:"Your total score", level:"Your level", breakdown:"Your answers",
+    all:"What each level means", you:"You are here", retry:"Evaluate again",
+    shot:"Take a screenshot of this result and send it to your lecturer if asked.",
+    noRange:"This score isn't in any level yet. Please tell your lecturer.",
+    forLect:"For lecturers: edit questions and levels", points:"points",
+    preview:"Preview of what students see. Not saved yet.", backSetup:"Back to setup",
+    setup:"Set up the evaluation", setupIntro:"Edit the title, questions, score ranges and descriptions. Save to publish the new version to every student on the same link.",
+    fTitle:"Title", fIntro:"Instructions for students", scaleH:"Labels for 1 to 5",
+    qH:"Questions", addQ:"+ Add question", rm:"Remove", rH:"Score ranges and descriptions",
+    rHint:"With {n} questions, totals run from {min} to {max}.",
+    from:"From", to:"To", lvlName:"Level name", desc:"Description (shown after submitting)",
+    addR:"+ Add range", split:"Split ranges evenly",
+    gap:"Totals {l} are not in any range.", overlap:"Totals {l} fall in more than one range.",
+    badR:"Range {i}: 'From' is larger than 'To'.", emptyQ:"Question {i} is empty.", noQ:"Add at least one question.",
+    allOk:"Every possible total falls in exactly one range. Ready to save.",
+    save:"Save and publish", doPreview:"Preview as student", copy:"Copy settings",
+    copied:"Settings copied.", copyManual:"Copy the text below and send it to Claude.",
+    fixFirst:"Fix the problems above before saving.", saving:"Saving...",
+    saved:"Saved. The page will reload with the new version.",
+    noCap:"Saving isn't available in this view. Open the page on claude.ai signed in as its owner, or copy the settings and send them to Claude.",
+    notWriter:"Only the page owner or an editor can save changes.",
+    conflict:"A newer version was just saved. The page will reload; please make your edits again.",
+    failed:"Couldn't save: {m}", dirty:"You have unsaved changes.", back:"← Student page"
+  }
+};
+
+function t(k, v){ var s = (T[lang] && T[lang][k]) || T.en[k] || k; if(v){ for(var x in v){ s = s.split("{"+x+"}").join(v[x]); } } return s; }
+function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]; }); }
+function clone(o){ return JSON.parse(JSON.stringify(o)); }
+function store(k, v){ try{ if(v === undefined) return localStorage.getItem("selfeval-"+k); localStorage.setItem("selfeval-"+k, v); }catch(e){ return null; } }
+function bounds(c){ var n = c.questions.length; return {n:n, min:n, max:n*5}; }
+function findRange(c, total){ for(var i=0;i<c.ranges.length;i++){ var r=c.ranges[i]; if(total>=+r.from && total<=+r.to) return i; } return -1; }
+function compact(list){
+  var out=[], i=0;
+  while(i<list.length){ var a=list[i], b=a; while(i+1<list.length && list[i+1]===b+1){ i++; b=list[i]; } out.push(a===b? String(a) : a+"–"+b); i++; }
+  return out.join(", ");
+}
+function validate(c){
+  var errs=[];
+  if(!c.questions.length) errs.push(t("noQ"));
+  c.questions.forEach(function(q,i){ if(!String(q).trim()) errs.push(t("emptyQ",{i:i+1})); });
+  c.ranges.forEach(function(r,i){ if(+r.from > +r.to) errs.push(t("badR",{i:i+1})); });
+  var b=bounds(c), gaps=[], over=[];
+  if(b.n){
+    for(var s=b.min;s<=b.max;s++){
+      var hits=0; c.ranges.forEach(function(r){ if(s>=+r.from && s<=+r.to) hits++; });
+      if(hits===0) gaps.push(s); else if(hits>1) over.push(s);
+    }
+  }
+  if(gaps.length) errs.push(t("gap",{l:compact(gaps)}));
+  if(over.length) errs.push(t("overlap",{l:compact(over)}));
+  return errs;
+}
+function view(){ return location.hash === "#setup" && !previewing ? "setup" : "student"; }
+function cur(){ return previewing ? draft : config; }
+
+function top(){
+  return '<div class="top"><span class="eyebrow">'+esc(t("tag"))+'</span>'+
+    '<div class="lang" role="group" aria-label="Language">'+
+    '<button type="button" data-act="lang" data-v="km" aria-pressed="'+(lang==="km")+'">ខ្មែរ</button>'+
+    '<button type="button" data-act="lang" data-v="en" aria-pressed="'+(lang==="en")+'">EN</button></div></div>';
+}
+
+function render(){
+  document.documentElement.lang = lang;
+  app.innerHTML = view()==="setup" ? setupView() : studentView();
+}
+
+/* ---------- Student ---------- */
+function studentView(){
+  var c = cur(), h = '<div class="wrap">'+top();
+  if(previewing) h += '<div class="banner"><span>'+esc(t("preview"))+'</span><button type="button" class="btn small ghost" data-act="endPreview">'+esc(t("backSetup"))+'</button></div>';
+  h += '<h1>'+esc(c.title)+'</h1>';
+  h += result ? resultView(c) : formView(c);
+  if(!previewing) h += '<p class="foot"><button type="button" class="linkbtn" data-act="toSetup">'+esc(t("forLect"))+'</button></p>';
+  return h + '</div>';
+}
+function formView(c){
+  var h = c.intro ? '<p class="intro">'+esc(c.intro)+'</p>' : '';
+  h += '<div class="card who"><label class="field" for="w-name">'+esc(t("name"))+'<input type="text" id="w-name" data-who="name" value="'+esc(who.name)+'" autocomplete="name"></label>'+
+       '<label class="field" for="w-sid">'+esc(t("sid"))+'<input type="text" id="w-sid" data-who="sid" value="'+esc(who.sid)+'"></label></div>';
+  c.questions.forEach(function(q,i){
+    var done = answers[i] != null;
+    h += '<fieldset class="card q'+(done?' done':'')+'" id="q'+i+'"><legend><div class="qhead"><span class="qnum">'+(i+1)+'</span><p class="qtext">'+esc(q)+'</p></div></legend><div class="scale">';
+    for(var v=1; v<=5; v++){
+      h += '<label class="opt"><input type="radio" name="q'+i+'" id="q'+i+'-'+v+'" value="'+v+'" data-q="'+i+'"'+(answers[i]===v?' checked':'')+'>'+
+           '<span><b>'+v+'</b><small>'+esc(c.scale[v-1]||"")+'</small></span></label>';
+    }
+    h += '</div></fieldset>';
+  });
+  var a = count(c), n = c.questions.length;
+  h += '<div class="bar"><div class="bar-in"><span class="progress" id="prog">'+esc(t("answered",{a:a,n:n}))+'</span>'+
+       '<button type="button" class="btn" id="submit" data-act="submit"'+(a<n?' disabled':'')+'>'+esc(a<n? t("needAll") : t("submit"))+'</button></div></div>';
+  return h;
+}
+function count(c){ var a=0; for(var i=0;i<c.questions.length;i++) if(answers[i]!=null) a++; return a; }
+
+function resultView(c){
+  var b = bounds(c), total = result.total, ri = findRange(c,total), r = ri>=0 ? c.ranges[ri] : null;
+  var h = '<div class="card res-head">';
+  var whoLine = [who.name, who.sid].filter(Boolean).map(esc).join(" · ");
+  h += '<div class="res-who">'+(whoLine? whoLine+' · ' : '')+esc(result.when)+'</div>';
+  h += '<div class="eyebrow">'+esc(t("total"))+'</div>';
+  h += '<div class="score"><span class="big">'+total+'</span><span class="of">/ '+b.max+'</span></div>';
+  if(r){
+    h += '<div><span class="pill">'+esc(r.from)+'–'+esc(r.to)+'</span></div><h2>'+esc(r.title)+'</h2><p class="desc">'+esc(r.desc)+'</p>';
+  } else {
+    h += '<p class="msg err">'+esc(t("noRange"))+'</p>';
+  }
+  h += track(c, total, ri) + '</div>';
+
+  h += '<div class="card stack"><h2>'+esc(t("all"))+'</h2>';
+  c.ranges.forEach(function(x,i){
+    h += '<div class="lvl'+(i===ri?' me':'')+'"><div><div class="rng">'+esc(x.from)+'–'+esc(x.to)+'</div>'+(i===ri?'<div class="you">'+esc(t("you"))+'</div>':'')+'</div>'+
+         '<div><h3>'+esc(x.title)+'</h3><p>'+esc(x.desc)+'</p></div></div>';
+  });
+  h += '</div>';
+
+  h += '<div class="card"><h2>'+esc(t("breakdown"))+'</h2><ul class="list">';
+  c.questions.forEach(function(q,i){
+    var v = result.answers[i];
+    h += '<li class="row"><span>'+(i+1)+'. '+esc(q)+'</span><span class="v">'+v+' / 5<small>'+esc(c.scale[v-1]||"")+'</small></span></li>';
+  });
+  h += '</ul></div>';
+  h += '<p class="note">'+esc(t("shot"))+'</p>';
+  h += '<div class="actions"><button type="button" class="btn ghost" data-act="retry">'+esc(t("retry"))+'</button></div>';
+  return h;
+}
+function track(c, total, ri){
+  var b = bounds(c), span = b.max - b.min + 1, k = c.ranges.length || 1;
+  var segs = c.ranges.map(function(r,i){
+    var lo = Math.max(+r.from, b.min), hi = Math.min(+r.to, b.max);
+    var w = Math.max(0, hi - lo + 1) / span * 100;
+    var pct = 18 + Math.round(82 * (k===1 ? 1 : i/(k-1)));
+    return w>0 ? '<div title="'+esc(r.title)+'" style="width:'+w+'%;background:color-mix(in srgb,var(--accent) '+pct+'%,var(--bg))"></div>' : '';
+  }).join("");
+  var pos = ((total - b.min) + 0.5) / span * 100;
+  return '<div class="track" aria-hidden="true"><div class="marker" style="left:'+pos+'%">'+total+'<i></i></div><div class="segs">'+segs+'</div>'+
+         '<div class="ends"><span>'+b.min+'</span><span>'+b.max+'</span></div></div>';
+}
+
+/* ---------- Setup ---------- */
+function setupView(){
+  var d = draft, b = bounds(d), h = '<div class="wrap">'+top();
+  h += '<div class="top"><button type="button" class="linkbtn" data-act="toStudent">'+esc(t("back"))+'</button></div>';
+  h += '<h1>'+esc(t("setup"))+'</h1><p class="intro">'+esc(t("setupIntro"))+'</p>';
+  h += '<div class="card stack"><label class="field" for="s-title">'+esc(t("fTitle"))+'<input type="text" id="s-title" data-path="title" value="'+esc(d.title)+'"></label>'+
+       '<label class="field" for="s-intro">'+esc(t("fIntro"))+'<textarea id="s-intro" data-path="intro">'+esc(d.intro)+'</textarea></label></div>';
+  h += '<div class="card stack"><h2>'+esc(t("scaleH"))+'</h2><div class="scale-edit">';
+  for(var v=0; v<5; v++) h += '<label class="field" for="s-sc'+v+'">'+(v+1)+'<input type="text" id="s-sc'+v+'" data-path="scale.'+v+'" value="'+esc(d.scale[v]||"")+'"></label>';
+  h += '</div></div>';
+  h += '<div class="card stack"><div class="sec-head"><h2>'+esc(t("qH"))+' ('+d.questions.length+')</h2><button type="button" class="btn small ghost" data-act="addQ">'+esc(t("addQ"))+'</button></div>';
+  d.questions.forEach(function(q,i){
+    h += '<div class="qedit"><span class="qnum">'+(i+1)+'</span><textarea id="s-q'+i+'" aria-label="'+esc(t("qH"))+' '+(i+1)+'" data-path="questions.'+i+'">'+esc(q)+'</textarea>'+
+         '<button type="button" class="rm" data-act="rmQ" data-i="'+i+'">'+esc(t("rm"))+'</button></div>';
+  });
+  h += '</div>';
+  h += '<div class="card stack"><div class="sec-head"><h2>'+esc(t("rH"))+'</h2><div class="actions">'+
+       '<button type="button" class="btn small ghost" data-act="split">'+esc(t("split"))+'</button>'+
+       '<button type="button" class="btn small ghost" data-act="addR">'+esc(t("addR"))+'</button></div></div>';
+  h += '<p class="note" id="rhint">'+esc(t("rHint",{n:b.n,min:b.min,max:b.max}))+'</p>';
+  d.ranges.forEach(function(r,i){
+    h += '<div class="redit">'+
+      '<label class="field" for="s-rf'+i+'">'+esc(t("from"))+'<input type="number" id="s-rf'+i+'" data-path="ranges.'+i+'.from" value="'+esc(r.from)+'"></label>'+
+      '<label class="field" for="s-rt'+i+'">'+esc(t("to"))+'<input type="number" id="s-rt'+i+'" data-path="ranges.'+i+'.to" value="'+esc(r.to)+'"></label>'+
+      '<label class="field t" for="s-rn'+i+'">'+esc(t("lvlName"))+'<input type="text" id="s-rn'+i+'" data-path="ranges.'+i+'.title" value="'+esc(r.title)+'"></label>'+
+      '<button type="button" class="rm" data-act="rmR" data-i="'+i+'">'+esc(t("rm"))+'</button>'+
+      '<label class="field full" for="s-rd'+i+'">'+esc(t("desc"))+'<textarea id="s-rd'+i+'" data-path="ranges.'+i+'.desc">'+esc(r.desc)+'</textarea></label></div>';
+  });
+  h += '<div id="checks">'+checks()+'</div></div>';
+  h += '<div class="card stack"><div class="actions">'+
+       '<button type="button" class="btn" data-act="save">'+esc(t("save"))+'</button>'+
+       '<button type="button" class="btn ghost" data-act="preview">'+esc(t("doPreview"))+'</button>'+
+       '<button type="button" class="btn ghost" data-act="copy">'+esc(t("copy"))+'</button></div>'+
+       '<div id="status">'+statusHtml()+'</div>'+
+       (showJson ? '<textarea class="json" id="s-json" readonly aria-label="Settings">'+esc(JSON.stringify(clean(draft),null,2))+'</textarea>' : '')+
+       '</div>';
+  return h + '</div>';
+}
+function checks(){
+  var e = validate(draft);
+  if(!e.length) return '<p class="msg ok">'+esc(t("allOk"))+'</p>';
+  return '<div class="stack">'+e.map(function(m){ return '<p class="msg err">'+esc(m)+'</p>'; }).join("")+'</div>';
+}
+function statusHtml(){
+  var dirty = JSON.stringify(clean(draft)) !== JSON.stringify(config);
+  var s = status ? '<p class="msg '+status.kind+'">'+esc(status.text)+'</p>' : '';
+  if(!status && dirty) s = '<p class="msg info">'+esc(t("dirty"))+'</p>';
+  return s;
+}
+function refreshSetupBits(){
+  var c = document.getElementById("checks"); if(c) c.innerHTML = checks();
+  var s = document.getElementById("status"); if(s) s.innerHTML = statusHtml();
+  var j = document.getElementById("s-json"); if(j) j.value = JSON.stringify(clean(draft),null,2);
+}
+function clean(d){
+  return {
+    title:String(d.title||"").trim(), intro:String(d.intro||"").trim(),
+    scale:[0,1,2,3,4].map(function(i){ return String(d.scale[i]||"").trim(); }),
+    questions:d.questions.map(function(q){ return String(q).trim(); }),
+    ranges:d.ranges.map(function(r){ return {from:parseInt(r.from,10)||0, to:parseInt(r.to,10)||0, title:String(r.title||"").trim(), desc:String(r.desc||"").trim()}; })
+  };
+}
+function split(){
+  var b = bounds(draft), k = draft.ranges.length || 5;
+  while(draft.ranges.length < k) draft.ranges.push({from:0,to:0,title:"",desc:""});
+  var span = b.max - b.min + 1, base = Math.floor(span/k), extra = span % k, s = b.min;
+  draft.ranges.forEach(function(r,i){ var w = base + (i >= k-extra ? 1 : 0); r.from = s; r.to = s + w - 1; s += w; });
+}
+function buildDoc(cfg){
+  var css = document.getElementById("app-style").textContent;
+  var js = document.getElementById("app-script").textContent;
+  var json = JSON.stringify(cfg).replace(/</g,"\\u003c");
+  var S = "script";
+  return '<!DOCTYPE html>\n<html lang="km">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>Student Self-Evaluation</title>\n'+
+    '<link rel="preconnect" href="https://fonts.googleapis.com">\n<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'+
+    '<link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">\n'+
+    '<style id="app-style">'+css+'</style>\n<'+S+' id="cfg" type="application/json">'+json+'</'+S+'>\n</head>\n<body>\n<div id="app"></div>\n'+
+    '<'+S+' id="app-script">'+js+'</'+S+'>\n</body>\n</html>\n';
+}
+function getArtifact(){
+  try{ if(window.claude && typeof window.claude.use === "function") return Promise.resolve(window.claude.use("artifact")).catch(function(){ return null; }); }catch(e){}
+  return Promise.resolve(null);
+}
+function setStatus(text, kind){ status = text ? {text:text, kind:kind||"info"} : null; var s=document.getElementById("status"); if(s) s.innerHTML = statusHtml(); }
+function save(){
+  if(validate(draft).length){ setStatus(t("fixFirst"),"err"); return; }
+  setStatus(t("saving"),"info");
+  var cfg = clean(draft);
+  getArtifact().then(function(art){
+    if(!art || typeof art.publish !== "function"){ setStatus(t("noCap"),"err"); return; }
+    return art.publish(buildDoc(cfg)).then(function(){ config = cfg; setStatus(t("saved"),"ok"); }, function(e){
+      var m = String((e && (e.code || e.reason || e.message)) || e || "");
+      if(/not_writer|not_granted/i.test(m)) setStatus(t("notWriter"),"err");
+      else if(/conflict/i.test(m)) setStatus(t("conflict"),"err");
+      else setStatus(t("failed",{m:m||"unknown error"}),"err");
+    });
+  });
+}
+function copy(){
+  var text = JSON.stringify(clean(draft), null, 2);
+  var done = function(){ setStatus(t("copied"),"ok"); };
+  var manual = function(){ showJson = true; render(); setStatus(t("copyManual"),"info"); var j=document.getElementById("s-json"); if(j){ j.focus(); j.select(); } };
+  try{ navigator.clipboard.writeText(text).then(done, manual); }catch(e){ manual(); }
+}
+
+/* ---------- Events ---------- */
+app.addEventListener("change", function(e){
+  var el = e.target;
+  if(el.hasAttribute("data-q")){
+    var i = +el.getAttribute("data-q"); answers[i] = +el.value;
+    var fs = document.getElementById("q"+i); if(fs) fs.classList.add("done");
+    var c = cur(), a = count(c), n = c.questions.length;
+    document.getElementById("prog").textContent = t("answered",{a:a,n:n});
+    var btn = document.getElementById("submit"); btn.disabled = a<n; btn.textContent = a<n ? t("needAll") : t("submit");
+  }
+});
+app.addEventListener("input", function(e){
+  var el = e.target;
+  if(el.hasAttribute("data-who")){ who[el.getAttribute("data-who")] = el.value; return; }
+  var p = el.getAttribute("data-path"); if(!p) return;
+  var parts = p.split("."), o = draft;
+  for(var i=0;i<parts.length-1;i++) o = o[parts[i]];
+  o[parts[parts.length-1]] = el.value;
+  status = null;
+  if(parts[0]==="questions" || parts[0]==="ranges") { var c=document.getElementById("checks"); if(c) c.innerHTML = checks(); }
+  var s=document.getElementById("status"); if(s) s.innerHTML = statusHtml();
+  var j=document.getElementById("s-json"); if(j) j.value = JSON.stringify(clean(draft),null,2);
+});
+app.addEventListener("click", function(e){
+  var el = e.target.closest("[data-act]"); if(!el) return;
+  var act = el.getAttribute("data-act"), i = +el.getAttribute("data-i");
+  switch(act){
+    case "lang": lang = el.getAttribute("data-v"); store("lang", lang); render(); break;
+    case "submit":
+      var c = cur(); if(count(c) < c.questions.length) return;
+      var arr = c.questions.map(function(_,k){ return answers[k]; });
+      result = { answers:arr, total:arr.reduce(function(s,v){ return s+v; },0),
+                 when:new Date().toLocaleString(lang==="km"?"km-KH":"en-GB",{dateStyle:"medium",timeStyle:"short"}) };
+      render(); window.scrollTo(0,0); break;
+    case "retry": result = null; answers = {}; render(); window.scrollTo(0,0); break;
+    case "toSetup": location.hash = "setup"; break;
+    case "toStudent": history.replaceState(null,"",location.pathname+location.search); previewing=false; render(); window.scrollTo(0,0); break;
+    case "preview": previewing = true; result = null; answers = {}; render(); window.scrollTo(0,0); break;
+    case "endPreview": previewing = false; result = null; answers = {}; render(); window.scrollTo(0,0); break;
+    case "addQ": draft.questions.push(""); status=null; render(); var q=document.getElementById("s-q"+(draft.questions.length-1)); if(q) q.focus(); break;
+    case "rmQ": draft.questions.splice(i,1); status=null; render(); break;
+    case "addR": draft.ranges.push({from:"",to:"",title:"",desc:""}); status=null; render(); break;
+    case "rmR": draft.ranges.splice(i,1); status=null; render(); break;
+    case "split": split(); status=null; render(); break;
+    case "save": save(); break;
+    case "copy": copy(); break;
+  }
+});
+window.addEventListener("hashchange", function(){ previewing=false; result=null; render(); window.scrollTo(0,0); });
+render();
+})();
+</script>
+</body>
+</html>
